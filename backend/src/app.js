@@ -20,7 +20,7 @@ app.use(express.json());
 
 app.use(cookieParser()); // ✅ parse cookies
 app.use(cors({
-  origin: "http://localhost:5173", // React frontend URL
+  origin: "https://astrape.vercel.app", // React frontend URL
   credentials: true              // ✅ allow cookies
 }));
 
