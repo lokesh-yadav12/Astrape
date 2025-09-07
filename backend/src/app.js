@@ -20,9 +20,14 @@ app.use(express.json());
 
 app.use(cookieParser()); // ✅ parse cookies
 app.use(cors({
-  origin: "https://astrape.vercel.app", // React frontend URL
-  credentials: true              // ✅ allow cookies
+  origin: [
+    "https://astrape.vercel.app",   // frontend deployed
+    "http://localhost:5173"         // dev mode (Vite default)
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
 }));
+
 
 
 const __filename = fileURLToPath(import.meta.url);
