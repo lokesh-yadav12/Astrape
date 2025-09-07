@@ -2,7 +2,6 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import { generateToken } from "../utils/jwt.js";
 
-
 export const signup = async (req, res) => {
   const { username, email, password } = req.body;
   try {
@@ -11,23 +10,24 @@ export const signup = async (req, res) => {
 
     const token = generateToken(user);
 
-    // Set token as HttpOnly cookie
-    res
-      .cookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",  // or 'none' if cross-site
-         path: "/",   
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
-      })
-      .status(201)
-      .json({ message: "Signup successful", user: { username, email } });
+    // ✅ Cookie config
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,          // HTTPS only
+      sameSite: "none",      // cross-site allowed (Vercel <-> Render)
+      path: "/",             // 🔑 must be root for all routes
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+
+    res.status(201).json({
+      message: "Signup successful",
+      user: { username, email },
+    });
 
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
-
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
@@ -40,14 +40,19 @@ export const login = async (req, res) => {
 
     const token = generateToken(user);
 
-    res
-      .cookie("token", token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 24 * 60 * 60 * 1000,
-      })
-      .json({ message: "Login successful", user: { username: user.username, email } });
+    // ✅ Same cookie config as signup
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/",             // 🔑 was missing earlier
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    res.json({
+      message: "Login successful",
+      user: { username: user.username, email },
+    });
 
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -55,13 +60,12 @@ export const login = async (req, res) => {
 };
 
 export const logout = (req, res) => {
- res.clearCookie("token", {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "none",
-  path: "/",
-});
-res.json({ message: "Logged out successfully" });
+  // ✅ must match signup/login cookie flags
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,      // match login/signup
+    sameSite: "none",
+    path: "/",         // must match exactly
+  });
+  res.json({ message: "Logged out successfully" });
 };
-
-
